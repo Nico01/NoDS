@@ -69,20 +69,12 @@ int main(int argc, char** argv)
     LOG(LOG_INFO, "arm7_entry=%x", cart->header.arm7.entry);
     LOG(LOG_INFO, "arm7_size=%x", cart->header.arm7.size);
 
-    char blub[20];
-    gets(blub);
-
     // Setup window
     create_window(256, 384);
 
     // SDL mainloop
     while (running) {
         arm_step(system->arm7);
-        /*for (int i = 0; i < 16; i++) {
-            LOG(LOG_INFO, "r%d=%x", i, *arm7->state->r_ptr[i]);
-        }
-        char blub[20];
-        gets(blub);*/
 
         // Process SDL events
         while (SDL_PollEvent(&event)) {
