@@ -30,7 +30,7 @@ int main(int argc, char** argv)
 {
     SDL_Event event;
     bool running = true;
-    nds_cartridge* cart = nds_cart_open("platin.nds");
+    nds_cartridge* cart = nds_cart_open("rom.nds");
     nds_system* system = nds_make(cart);
 
     // Did we read the file?
