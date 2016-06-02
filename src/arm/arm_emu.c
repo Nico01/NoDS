@@ -29,7 +29,7 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
 
     // Return if the instruction condition is not met
     CONDITION_BREAK(instruction >> 28);
-    
+
     // Perform the actual execution
     switch (type) {
     case ARM_1: {
@@ -40,10 +40,18 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
         int reg_dest = (instruction >> 16) & 0xF;
         bool set_flags = instruction & (1 << 20);
         bool accumulate = instruction & (1 << 21);
+
+        // Multiply rOP1 with rOP2, store result in rDST
         REG(reg_dest) = REG(reg_operand1) * REG(reg_operand2);
+
+        // When the accumulate bit is set the value of an
+        // additional register will be added to the result
         if (accumulate) {
             REG(reg_dest) += REG(reg_operand3);
         }
+
+        // When the S bit is set the zero and sign flags
+        // must be update according to the result
         if (set_flags) {
             CALC_SIGN(REG(reg_dest));
             CALC_ZERO(REG(reg_dest));
@@ -60,29 +68,50 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
         bool accumulate = instruction & (1 << 21);
         bool sign_extend = instruction & (1 << 22);
         s64 result;
+
+        // Since this is a *64 bit* addition but ARM registers
+        // are only are *32 bit* wide the operands can be
+        // sign-extended in order to preserve the sign
         if (sign_extend) {
             s64 operand1 = REG(reg_operand1);
             s64 operand2 = REG(reg_operand2);
+
+            // If bit 31 is set we simply force bits 32-63 to high
             operand1 |= operand1 & 0x80000000 ? 0xFFFFFFFF00000000 : 0;
             operand2 |= operand2 & 0x80000000 ? 0xFFFFFFFF00000000 : 0;
+
+            // Perform the multiplication and store result
             result = operand1 * operand2;
         } else {
-            u64 uresult = (u64)REG(reg_operand1) * (u64)REG(reg_operand2);
-            result = uresult;
+            result = (u64)REG(reg_operand1) * (u64)REG(reg_operand2);
         }
+
+        // When the accumulate bit is set the value of an
+        // a long consisting of the two destination registers
+        // will be added to the result
         if (accumulate) {
-            s64 value = REG(reg_dest_high);
+            s64 value;
+
+            // Basically construct (rHIGH << 32) | rLOW
+            value = REG(reg_dest_high);
             value <<= 16;
             value <<= 16;
             value |= REG(reg_dest_low);
+
+            // Add the generated long
             result += value;
         }
+
+        // Split the result into the two destination registers
         REG(reg_dest_low) = result & 0xFFFFFFFF;
         REG(reg_dest_high) = result >> 32;
+
+        // When the S bit is set the zero and sign flags
+        // must be update according to the result
         if (set_flags) {
             CALC_SIGN(REG(reg_dest_high));
             CALC_ZERO(result);
-        }            
+        }
         return;
     }
     case ARM_3: {
@@ -105,9 +134,7 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
         bool swap_byte = instruction & (1 << 22);
         u32 memory_value;
 
-        #ifdef DEBUG
         ASSERT(reg_source == 15 || reg_dest == 15 || reg_base == 15, LOG_WARN, "Single Data Swap, thou shall not use r15, r15=0x%x", state->r15);
-        #endif 
 
         if (swap_byte) {
             memory_value = MEM_READ_8(REG(reg_base)) & 0xFF;
@@ -142,23 +169,21 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
         bool pre_indexed = instruction & (1 << 24);
         u32 address = REG(reg_base);
 
-        #ifdef DEBUG
-        // Instructions neither write back if base register is state->r15 nor should they have the write-back bit set when being post-indexed (post-indexing automatically writes back the address)
+        // Instructions neither write back if base register is r15 nor should they have the write-back bit set when being post-indexed (post-indexing automatically writes back the address)
         ASSERT(reg_base == 15 && write_back, LOG_WARN, "Halfword and Signed Data Transfer, thou shall not writeback to r15, r15=0x%x", state->r15);
         ASSERT(write_back && !pre_indexed, LOG_WARN, "Halfword and Signed Data Transfer, thou shall not have write-back bit if being post-indexed, r15=0x%x", state->r15);
 
         // Load-bit shall not be unset when signed transfer is selected
         ASSERT(type == ARM_7 && !load, LOG_WARN, "Halfword and Signed Data Transfer, thou shall not store in signed mode, r15=0x%x", state->r15);
-        #endif
 
         // If the instruction is immediate take an 8-bit immediate value as offset, otherwise take the contents of a register as offset
         if (immediate) {
             offset = (instruction & 0xF) | ((instruction >> 4) & 0xF0);
         } else {
             int reg_offset = instruction & 0xF;
-            #ifdef DEBUG
-            ASSERT(reg_offset == 15, LOG_WARN, "Halfword and Signed Data Transfer, thou shall not take state->r15 as offset, r15=0x%x", state->r15);
-            #endif
+
+            ASSERT(reg_offset == 15, LOG_WARN, "Halfword and Signed Data Transfer, thou shall not take r15 as offset, r15=0x%x", state->r15);
+
             offset = REG(reg_offset);
         }
 
@@ -243,7 +268,7 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
                 if (instruction & (1 << 18)) mask |= 0x00FF0000;
                 if (instruction & (1 << 19)) mask |= 0xFF000000;
 
-                // Decode the value written to state->cpsr/spsr
+                // Decode the value written to cpsr/spsr
                 if (immediate) {
                     int imm = instruction & 0xFF;
                     int ror = ((instruction >> 8) & 0xF) << 1;
@@ -295,7 +320,7 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
                     int reg_shift = (instruction >> 8) & 0xF;
                     amount = REG(reg_shift);
 
-                    // When using a register to specify the shift amount state->r15 will be 12 bytes ahead instead of 8 bytes
+                    // When using a register to specify the shift amount r15 will be 12 bytes ahead instead of 8 bytes
                     if (reg_operand1 == 15) {
                         operand1 += 4;
                     }
@@ -326,8 +351,8 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
                 }
             }
 
-            // When destination register is state->r15 and s bit is set rather than updating the flags restore state->cpsr
-            // This is allows for restoring state->r15 and state->cpsr at the same time
+            // When destination register is r15 and s bit is set rather than updating the flags restore cpsr
+            // This is allows for restoring r15 and cpsr at the same time
             if (reg_dest == 15 && set_flags) {
                 set_flags = false;
                 state->cpsr = *state->spsr_ptr;
@@ -378,7 +403,7 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
                 REG(reg_dest) = result;
                 break;
             }
-            case 0b0100: { // ADD   
+            case 0b0100: { // ADD
                 u32 result = operand1 + operand2;
                 if (set_flags) {
                     u64 result_long = (u64)operand1 + (u64)operand2;
@@ -499,7 +524,7 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
             }
             }
 
-            // When writing to state->r15 initiate pipeline flush
+            // When writing to r15 initiate pipeline flush
             if (reg_dest == 15) {
                 cpu->pipeline.flush = true;
             }
@@ -520,11 +545,9 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
         bool immediate = (instruction & (1 << 25)) == 0;
         u32 address = REG(reg_base);
 
-        #ifdef DEBUG
-        // Instructions neither write back if base register is state->r15 nor should they have the write-back bit set when being post-indexed (post-indexing automatically writes back the address)
+        // Instructions neither write back if base register is r15 nor should they have the write-back bit set when being post-indexed (post-indexing automatically writes back the address)
         ASSERT(reg_base == 15 && write_back, LOG_WARN, "Single Data Transfer, thou shall not writeback to r15, r15=0x%x", state->r15);
         ASSERT(write_back && !pre_indexed, LOG_WARN, "Single Data Transfer, thou shall not have write-back bit if being post-indexed, r15=0x%x", state->r15);
-        #endif
 
         // The offset added to the base address can either be an 12 bit immediate value or a register shifted by 5 bit immediate value
         if (immediate) {
@@ -533,11 +556,9 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
             int reg_offset = instruction & 0xF;
             u32 amount = (instruction >> 7) & 0x1F;
             int shift = (instruction >> 5) & 3;
-            bool carry; // this is not actually used but we need a var for carry out.
+            bool carry;
 
-            #ifdef DEBUG
             ASSERT(reg_offset == 15, LOG_WARN, "Single Data Transfer, thou shall not use r15 as offset, r15=0x%x", state->r15);
-            #endif
 
             offset = REG(reg_offset);
 
@@ -618,9 +639,7 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
     }
     case ARM_10:
         // ARM.10 Undefined
-        #ifdef DEBUG
         LOG(LOG_ERROR, "Undefined instruction (0x%x), r15=0x%x", instruction, state->r15);
-        #endif
         return;
     case ARM_11:
     {
@@ -641,17 +660,13 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
         int old_mode;
         int first_register = 0;
 
-        #ifdef DEBUG
-        // Base register must not be state->r15
+        // Base register must not be r15
         ASSERT(reg_base == 15, LOG_WARN, "Block Data Tranfser, thou shall not take r15 as base register, r15=0x%x", state->r15);
-        #endif
 
-        // If the s bit is set and the instruction is either a store or state->r15 is not in the list switch to user mode
+        // If the s bit is set and the instruction is either a store or r15 is not in the list switch to user mode
         if (s_bit && (!load || !pc_in_list)) {
-            #ifdef DEBUG
             // Writeback must not be activated in this case
             ASSERT(write_back, LOG_WARN, "Block Data Transfer, thou shall not do user bank transfer with writeback, r15=0x%x", state->r15);
-            #endif
 
             // Save current mode and enter user mode
             old_mode = state->cpsr & 0x1F;
@@ -692,14 +707,13 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
                         // Load the register
                         REG(i) = MEM_READ_32(address);
 
-                        // If state->r15 is overwritten, the pipeline must be flushed
+                        // If r15 is overwritten, the pipeline must be flushed
                         if (i == 15) {
                             // If the s bit is set a mode switch is performed
                             if (s_bit) {
-                                #ifdef DEBUG
-                                // spsr_<mode> must not be copied to state->cpsr in user mode because user mode has not such a register
+                                // spsr_<mode> must not be copied to cpsr in user mode because user mode has not such a register
                                 ASSERT((state->cpsr & 0x1F) == MODE_USR, LOG_ERROR, "Block Data Transfer is about to copy spsr_<mode> to cpsr, however we are in user mode, r15=0x%x", state->r15);
-                                #endif
+
                                 state->cpsr = *state->spsr_ptr;
                                 ARM_REMAP(state);
                             }
@@ -744,14 +758,13 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
                         // Load the register
                         REG(i) = MEM_READ_32(address);
 
-                        // If state->r15 is overwritten, the pipeline must be flushed
+                        // If r15 is overwritten, the pipeline must be flushed
                         if (i == 15) {
                             // If the s bit is set a mode switch is performed
                             if (s_bit) {
-                                #ifdef DEBUG
-                                // spsr_<mode> must not be copied to state->cpsr in user mode because user mode has no such a register
+                                // spsr_<mode> must not be copied to cpsr in user mode because user mode has no such a register
                                 ASSERT((state->cpsr & CPSR_MODE) == MODE_USR, LOG_ERROR, "Block Data Transfer is about to copy spsr_<mode> to cpsr, however we are in user mode, r15=0x%x", state->r15);
-                                #endif
+
                                 state->cpsr = *state->spsr_ptr;
                                 ARM_REMAP(state);
                             }
@@ -801,22 +814,16 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
         return;
     }
     case ARM_13:
-        #ifdef DEBUG
         // ARM.13 Coprocessor data transfer
         LOG(LOG_ERROR, "Unimplemented coprocessor data transfer, r15=0x%x", state->r15);
-        #endif
         return;
     case ARM_14:
-        #ifdef DEBUG
         // ARM.14 Coprocessor data operation
         LOG(LOG_ERROR, "Unimplemented coprocessor data operation, r15=0x%x", state->r15);
-        #endif
         return;
     case ARM_15:
-        #ifdef DEBUG
         // ARM.15 Coprocessor register transfer
         LOG(LOG_ERROR, "Unimplemented coprocessor register transfer, r15=0x%x", state->r15);
-        #endif            
         return;
     case ARM_16:
         // ARM.16 Software interrupt
