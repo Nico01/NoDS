@@ -23,11 +23,11 @@
 #include "arm_global.h"
 
 #define MEM_READ_8(address) cpu->memory.read_byte(cpu->memory.object, address)
-#define MEM_READ_16(address) cpu->memory.read_hword(cpu->memory.object, address)
-#define MEM_READ_32(address) cpu->memory.read_word(cpu->memory.object, address)
+#define MEM_READ_16(address) cpu->memory.read_hword(cpu->memory.object, (address) & ~1)
+#define MEM_READ_32(address) cpu->memory.read_word(cpu->memory.object, (address) & ~3)
 #define MEM_WRITE_8(address, value) cpu->memory.write_byte(cpu->memory.object, address, value)
-#define MEM_WRITE_16(address, value) cpu->memory.write_hword(cpu->memory.object, address, value)
-#define MEM_WRITE_32(address, value) cpu->memory.write_word(cpu->memory.object, address, value)
+#define MEM_WRITE_16(address, value) cpu->memory.write_hword(cpu->memory.object, (address) & ~1, value)
+#define MEM_WRITE_32(address, value) cpu->memory.write_word(cpu->memory.object, (address) & ~3, value)
 
 #define FLUSH cpu->pipeline.status = 0;\
               cpu->pipeline.flush = false;

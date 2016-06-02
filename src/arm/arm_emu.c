@@ -71,7 +71,7 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
 
         // Since this is a *64 bit* addition but ARM registers
         // are only are *32 bit* wide the operands can be
-        // sign-extended in order to preserve the sign
+        // sign-extended in order to preserve the sign bit
         if (sign_extend) {
             s64 operand1 = REG(reg_operand1);
             s64 operand2 = REG(reg_operand2);
@@ -117,13 +117,21 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
     case ARM_3: {
         // ARM.3 Branch and exchange
         int reg_address = instruction & 0xF;
+
+        // When the LSB of the address is set this indicates
+        // a switch into THUMB execution mode. This involves
+        // setting the THUMB bit in the program status register
         if (REG(reg_address) & 1) {
             state->r15 = REG(reg_address) & ~1;
             state->cpsr |= CPSR_THUMB;
         } else {
             state->r15 = REG(reg_address) & ~3;
         }
+
+        // Flush the CPU pipeline in order to
+        // fetch instructions from the new PC
         cpu->pipeline.flush = true;
+
         return;
     }
     case ARM_4: {
@@ -134,19 +142,28 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
         bool swap_byte = instruction & (1 << 22);
         u32 memory_value;
 
-        ASSERT(reg_source == 15 || reg_dest == 15 || reg_base == 15, LOG_WARN, "Single Data Swap, thou shall not use r15, r15=0x%x", state->r15);
+        // Single Data Swap instructions may not use r15
+        ASSERT(reg_source == 15, LOG_ERROR, "ARM.4 rSRC=15, r15=%x", state->r15);
+        ASSERT(reg_dest == 15, LOG_ERROR, "ARM.4 rDST=15, r15=%x", state->r15);
+        ASSERT(reg_base == 15, LOG_ERROR, "ARM.4 rBSE=15, r15=%x", state->r15);
 
+        // If the swap bit is set the byte at *rBSE
+        // get overwritten with the LSB of rSRC and
+        // the *old* value at *rBSE will be storen in rDST
         if (swap_byte) {
-            memory_value = MEM_READ_8(REG(reg_base)) & 0xFF;
-            MEM_WRITE_8(REG(reg_base), REG(reg_source) & 0xFF);
+            memory_value = MEM_READ_8(REG(reg_base));
+            MEM_WRITE_8(REG(reg_base), REG(reg_source));
             REG(reg_dest) = memory_value;
         } else {
             u32 address = REG(reg_base);
             int amount = (address & 3) * 8;
-            memory_value = MEM_READ_32(address & ~3);
+
+            // Emulate rotated read
+            memory_value = MEM_READ_32(address);
             if (amount != 0) {
                 memory_value = (memory_value >> amount) | (memory_value << (32 - amount));
             }
+
             MEM_WRITE_32(address, REG(reg_source));
             REG(reg_dest) = memory_value;
         }
