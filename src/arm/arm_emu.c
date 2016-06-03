@@ -169,14 +169,12 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
         }
         return;
     }
-    // TODO: Recheck for correctness and look for possabilities to optimize this bunch of code
     case ARM_5:
     case ARM_6:
     case ARM_7: {
         // ARM.5 Halfword data transfer, register offset
         // ARM.6 Halfword data transfer, immediate offset
         // ARM.7 Signed data transfer (byte/halfword)
-        u32 offset;
         int reg_dest = (instruction >> 12) & 0xF;
         int reg_base = (instruction >> 16) & 0xF;
         bool load = instruction & (1 << 20);
@@ -185,26 +183,36 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
         bool add_to_base = instruction & (1 << 23);
         bool pre_indexed = instruction & (1 << 24);
         u32 address = REG(reg_base);
+        u32 offset;
 
-        // Instructions neither write back if base register is r15 nor should they have the write-back bit set when being post-indexed (post-indexing automatically writes back the address)
-        ASSERT(reg_base == 15 && write_back, LOG_WARN, "Halfword and Signed Data Transfer, thou shall not writeback to r15, r15=0x%x", state->r15);
-        ASSERT(write_back && !pre_indexed, LOG_WARN, "Halfword and Signed Data Transfer, thou shall not have write-back bit if being post-indexed, r15=0x%x", state->r15);
+        // Writeback may not be enabled when rBSE=15
+        ASSERT(reg_base == 15 && write_back, LOG_ERROR,
+               "ARM.5-7: writeback to r15, r15=0x%x", state->r15);
 
-        // Load-bit shall not be unset when signed transfer is selected
-        ASSERT(type == ARM_7 && !load, LOG_WARN, "Halfword and Signed Data Transfer, thou shall not store in signed mode, r15=0x%x", state->r15);
+        // Writeback may not be enabled in post-indexed mode
+        ASSERT(write_back && !pre_indexed, LOG_ERROR,
+               "ARM.5-7: writeback in post-indexed mode, r15=0x%x", state->r15);
 
-        // If the instruction is immediate take an 8-bit immediate value as offset, otherwise take the contents of a register as offset
+        // Signed mode is only capable when loading
+        ASSERT(type == ARM_7 && !load, LOG_ERROR,
+               "ARM.7: Storing in signed mode, r15=0x%x", state->r15);
+
+        // If the instruction is immediate take an 8-bit
+        // immediate value as offset, otherwise take the
+        // contents of a register as offset
         if (immediate) {
             offset = (instruction & 0xF) | ((instruction >> 4) & 0xF0);
         } else {
             int reg_offset = instruction & 0xF;
 
-            ASSERT(reg_offset == 15, LOG_WARN, "Halfword and Signed Data Transfer, thou shall not take r15 as offset, r15=0x%x", state->r15);
+            // Using r15 as offset is strictly disallowed
+            ASSERT(reg_offset == 15, LOG_ERROR,
+                   "ARM.5-7: rOFS=15, r15=0x%x", state->r15);
 
             offset = REG(reg_offset);
         }
 
-        // If the instruction is pre-indexed we must add/subtract the offset beforehand
+        // Handle pre-indexed address update
         if (pre_indexed) {
             if (add_to_base) {
                 address += offset;
@@ -213,7 +221,6 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
             }
         }
 
-        // Perform the actual load / store operation
         if (load) {
             // TODO: Check if pipeline is flushed when reg_dest is r15
             if (type == ARM_7) {
@@ -275,7 +282,8 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
             bool msr = instruction & (1 << 21);
 
             if (msr) {
-                // MSR
+                // Moves general purpose register into a status
+                // register which can either be cpsr or spsr
                 u32 mask = 0;
                 u32 operand;
 
@@ -295,15 +303,15 @@ void arm4_execute(arm_cpu* cpu, u32 instruction)
                     operand = REG(reg_source);
                 }
 
-                // Write
+                // Write the masked register to the program status registers
+                // The spsr bit indicates that the spsr should be used
                 if (use_spsr) {
                     *state->spsr_ptr = (*state->spsr_ptr & ~mask) | (operand & mask);
                 } else {
                     state->cpsr = (state->cpsr & ~mask) | (operand & mask);
                     ARM_REMAP(state);
                 }
-            } else {
-                // MRS
+            } else { // MRS
                 int reg_dest = (instruction >> 12) & 0xF;
                 REG(reg_dest) = use_spsr ? *state->spsr_ptr : state->cpsr;
             }

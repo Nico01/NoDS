@@ -20,6 +20,7 @@
 #include <SDL/SDL.h>
 #include "../../common/types.h"
 #include "../../common/log.h"
+#include "../../arm/gdb/arm_gdb.h"
 #include "../../nds/nds_cartridge.h"
 #include "../../nds/nds_system.h"
 #include "../../version.h"
@@ -68,6 +69,9 @@ int main(int argc, char** argv)
     LOG(LOG_INFO, "arm7_ram=%x", cart->header.arm7.ram);
     LOG(LOG_INFO, "arm7_entry=%x", cart->header.arm7.entry);
     LOG(LOG_INFO, "arm7_size=%x", cart->header.arm7.size);
+
+    // Setup gdb stub for ARM7
+    arm_gdb* gdb1 = arm_gdb_make(system->arm7, 1337);
 
     // Setup window
     create_window(256, 384);

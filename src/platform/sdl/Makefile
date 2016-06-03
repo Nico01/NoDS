@@ -70,7 +70,7 @@ LDFLAGS   =
 
 # The directories in which source files reside.
 # If not specified, only the current directory will be serached.
-SRCDIRS   = . ../../ ../../arm ../../common ../../nds
+SRCDIRS   = . ../../ ../../arm ../../arm/gdb ../../common ../../nds
 
 # The executable file name.
 # If not specified, current directory name or `a.out' will be used.
@@ -88,7 +88,7 @@ HDREXTS = .h .H .hh .hpp .HPP .h++ .hxx .hp
 
 # The pre-processor and compiler options.
 # Users can override those variables from the command line.
-CFLAGS  = -g -Ofast -DDEBUG
+CFLAGS  = -g -Ofast -DDEBUG -DGDB_SUPPORT
 CXXFLAGS= -g -Ofast
 
 # The C program compiler.
