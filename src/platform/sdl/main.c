@@ -52,6 +52,7 @@ int main(int argc, char** argv)
     bool running = true;
     nds_cartridge* cart = nds_cart_open("rom.nds");
     nds_system* system = nds_make(cart);
+    system_descriptor descriptor = nds_descriptor;
 
     // Did we read the file?
     if (cart == NULL) {
@@ -70,11 +71,8 @@ int main(int argc, char** argv)
     LOG(LOG_INFO, "arm7_entry=%x", cart->header.arm7.entry);
     LOG(LOG_INFO, "arm7_size=%x", cart->header.arm7.size);
 
-    // Setup gdb stub for ARM7
-    arm_gdb* gdb1 = arm_gdb_make(system->arm7, 1337);
-
     // Setup window
-    create_window(256, 384);
+    create_window(descriptor.screen_width, descriptor.screen_height);
 
     // SDL mainloop
     while (running) {

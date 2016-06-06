@@ -17,25 +17,20 @@
  * along with NoDS. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _NDS_SYSTEM_H_
-#define _NDS_SYSTEM_H_
+#ifndef _SYSTEM_DESCRIPTOR_H_
+#define _SYSTEM_DESCRIPTOR_H_
 
-#include "../common/system_descriptor.h"
-#include "../arm/arm_cpu.h"
-#include "nds_mmu.h"
-#include "nds_cartridge.h"
+typedef void* (*open_func)(char* rom_path);
+typedef void (*close_func)(void* system);
+typedef void (*frame_func)(void* system);
 
 typedef struct {
-    arm_cpu* arm7;
-    arm_cpu* arm9;
-    nds_mmu* mmu;
-    nds_cartridge* cart;
-} nds_system;
-
-extern system_descriptor nds_descriptor;
-
-void nds_init(nds_system* system);
-nds_system* nds_make(nds_cartridge* cart);
-void nds_free(nds_system* system);
+    char* name;
+    int screen_width;
+    int screen_height;
+    open_func open;
+    close_func close;
+    frame_func frame;
+} system_descriptor;
 
 #endif

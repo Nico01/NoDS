@@ -25,6 +25,15 @@
 #define BIN_MAX_SIZE_2 0x3BFE00
 #define BIN_MAX_SIZE_3 0xFE00
 
+system_descriptor nds_descriptor = {
+    .name = "nds",
+    .screen_width = 256,
+    .screen_height = 384,
+    .open = NULL,
+    .close = NULL,
+    .frame = NULL
+};
+
 arm_memory mmu7_template = {
     .cycles = (cycle_func)nds7_cycles,
     .read_byte = (read_func)nds7_read_byte,
