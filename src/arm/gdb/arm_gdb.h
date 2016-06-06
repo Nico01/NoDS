@@ -27,6 +27,8 @@
 #include <netinet/in.h>
 #include "../arm_cpu.h"
 
+#define GDB_STUB_MAX_LINE 1200
+
 typedef struct {
     int socket;
     int socket2;
