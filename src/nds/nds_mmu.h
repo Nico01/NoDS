@@ -24,14 +24,14 @@
 #include "../arm/arm_cpu.h"
 
 typedef enum {
+    ARM7 = 0,
+    ARM9 = 1
+} nds_cpu_index;
+
+typedef enum {
     ARM7_ALLOC_1ND = 1,
     ARM7_ALLOC_2ND = 2
 } nds_swram_alloc;
-
-/*typedef enum {
-    ARM7_ALLOC_VRAM_C = 1,
-    ARM7_ALLOC_VRAM_D = 2
-} nds_vram_alloc;*/
 
 typedef struct {
     int mst;
@@ -39,10 +39,48 @@ typedef struct {
     bool enable;
 } nds_vram_cnt;
 
+typedef enum {
+    INT_VBLANK = 1,
+    INT_HBLANK = 2,
+    INT_VCOUNT = 4,
+    INT_TIMER0 = 8,
+    INT_TIMER1 = 16,
+    INT_TIMER2 = 32,
+    INT_TIMER3 = 64,
+    INT_RTC = 128,
+    INT_DMA0 = 256,
+    INT_DMA1 = 512,
+    INT_DMA2 = 1024,
+    INT_DMA3 = 2048,
+    INT_KEYPAD = 4096,
+    INT_SLOT2 = 8192,
+    INT_IPC_SYNC = 65536,
+    INT_IPC_SEND = 131072,
+    INT_IPC_RECV = 262144,
+    INT_SLOT1_COMPLETE = 524288,
+    INT_SLOT1_IREQ_MC = 1048576,
+    INT_GEOMETRY_FIFO = 2097152,
+    INT_UNFOLD_SCREEN = 4194304,
+    INT_SPI_BUS = 8388608,
+    INT_WIFI = 16777216
+} nds_interrupt;
+
 typedef struct {
-    // IO-registers
+    u32 buffer[16];
+    int index;
+} nds_fifo;
+
+typedef struct {
+    // Memory Control
     int wramcnt;
     nds_vram_cnt vramcnt[9];
+
+    // Interrupt Control (0 = ARM7, 1 = ARM9)
+    u32 interrupt_enable[2];
+    u32 interrupt_flag[2];
+
+    // IPC FIFO (0 = ARM7, 1 = ARM9)
+    nds_fifo fifo[2];
 
     u8 mram[0x400000]; // 4MB Main Memory
     u8 swram[0x8000]; // 32KB Shared WRAM

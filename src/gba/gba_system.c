@@ -21,7 +21,7 @@
 #include "../common/log.h"
 #include "gba_system.h"
 
-system_descriptor gba_descriptor = {
+system_descriptor nds_descriptor = {
     .name = "gba",
     .screen_width = 240,
     .screen_height = 160,
@@ -29,4 +29,3 @@ system_descriptor gba_descriptor = {
     .close = NULL,
     .frame = NULL
 };
-
