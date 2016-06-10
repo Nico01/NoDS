@@ -37,13 +37,19 @@ typedef enum {
 } nds_spi_device;
 
 typedef struct {
+    // SPICNT
     nds_spi_device device;
     nds_baud_rate baud_rate;
     bool busy;
     bool bugged;
     bool ireq;
     bool enable;
-    bool chipselect;
+    bool chipselect[3];
+
+
 } nds_spi_bus;
+
+u8 nds_spi_read(nds_spi_bus* spi_bus);
+void nds_spi_write(nds_spi_bus* spi_bus, u8 value);
 
 #endif

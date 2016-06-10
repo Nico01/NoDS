@@ -18,3 +18,49 @@
  */
 
 #include "nds_spi.h"
+#include "../common/log.h"
+
+u8 nds_spi_read(nds_spi_bus* spi_bus)
+{
+    if (!spi_bus->enable) {
+        LOG(LOG_ERROR, "SPI: read even though not enabled");
+        return;
+    }
+
+    switch (spi_bus->device) {
+    case SPI_POWERMAN:
+        LOG(LOG_INFO, "SPI: read from POWERMANAGER");
+        break;
+    case SPI_FIRMWARE:
+        LOG(LOG_INFO, "SPI: read from FIRMWARE");
+        break;
+    case SPI_TOUCHSCR:
+        LOG(LOG_INFO, "SPI: read from TOUCHSCREEN");
+        break;
+    case SPI_RESERVED:
+        LOG(LOG_INFO, "SPI: read from RESERVED (odd code?)");
+    }
+    return 0;
+}
+
+void nds_spi_write(nds_spi_bus* spi_bus, u8 value)
+{
+    if (!spi_bus->enable) {
+        LOG(LOG_ERROR, "SPI: write even though not enabled");
+        return;
+    }
+
+    switch (spi_bus->device) {
+    case SPI_POWERMAN:
+        LOG(LOG_INFO, "SPI: write to POWERMANAGER (%x)", value);
+        break;
+    case SPI_FIRMWARE:
+        LOG(LOG_INFO, "SPI: write to FIRMWARE (%x)", value);
+        break;
+    case SPI_TOUCHSCR:
+        LOG(LOG_INFO, "SPI: write to TOUCHSCREEN (%x)", value);
+        break;
+    case SPI_RESERVED:
+        LOG(LOG_INFO, "SPI: write to RESERVED (odd code?) (%x)", value);
+    }
+}

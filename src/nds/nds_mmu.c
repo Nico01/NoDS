@@ -78,13 +78,21 @@ u8 nds7_read_byte(nds_mmu* mmu, u32 address)
         }
         case NDS7_IO_SPICNT+1: {
             nds_spi_bus* spi_bus = &mmu->spi_bus;
+            nds_spi_device device = spi_bus->device;
 
             return spi_bus->device |
                    (spi_bus->bugged ? 4 : 0) |
-                   (spi_bus->chipselect ? 8 : 0) |
+                   (spi_bus->chipselect[device] ? 8 : 0) |
                    (spi_bus->ireq ? 64 : 0) |
                    (spi_bus->enable ? 128 : 0);
         }
+        case NDS7_IO_SPIDATA: {
+            nds_spi_bus* spi_bus = &mmu->spi_bus;
+
+            return nds_spi_read(spi_bus);
+        }
+        case NDS7_IO_SPIDATA+1:
+            return 0;
         }
         return 0;
     }
@@ -156,13 +164,19 @@ void nds7_write_byte(nds_mmu* mmu, u32 address, u8 value)
         }
         case NDS7_IO_SPICNT+1: {
             nds_spi_bus* spi_bus = &mmu->spi_bus;
+            nds_spi_device device = value & 3;
 
-            spi_bus->device = value & 3;
+            spi_bus->device = device;
             spi_bus->bugged = value & 4;
-            spi_bus->chipselect = value & 8;
+            spi_bus->chipselect[device] = value & 8;
             spi_bus->ireq = value & 64;
             spi_bus->enable = value & 128;
             break;
+        }
+        case NDS7_IO_SPIDATA: {
+            nds_spi_bus* spi_bus = &mmu->spi_bus;
+
+            nds_spi_write(spi_bus, value);
         }
         }
         break;
