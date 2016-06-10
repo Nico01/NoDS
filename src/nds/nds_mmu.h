@@ -76,6 +76,7 @@ typedef struct {
     nds_vram_cnt vramcnt[9];
 
     // Interrupt Control (0 = ARM7, 1 = ARM9)
+    u32 interrupt_master[2];
     u32 interrupt_enable[2];
     u32 interrupt_flag[2];
 

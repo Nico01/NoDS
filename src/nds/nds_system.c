@@ -22,8 +22,9 @@
 #include "nds_system.h"
 
 #define HEADER_RAM_LOC 0x3FFE00
-#define BIN_MAX_SIZE_2 0x3BFE00
-#define BIN_MAX_SIZE_3 0xFE00
+
+// this number is chosen arbitrarly currently
+#define TICKS_PER_FRAME 0x4000
 
 system_descriptor nds_descriptor = {
     .name = "nds",
@@ -48,6 +49,16 @@ arm_memory mmu7_template = {
 void nds7_swi(arm_cpu* cpu, nds_system* system)
 {
     LOG(LOG_INFO, "SWI! r15=%x (ARM7)", system->arm7->state->r15);
+}
+
+void nds_frame(nds_system* system)
+{
+    nds_mmu* mmu = system->mmu;
+
+    for (int i = 0; i < TICKS_PER_FRAME; i++) {
+        // ARM7 logic
+        //if (mmu->interrupt_master[ARM7] && (mmu->interrupt_enable[ARM7] && mmu->interrupt_flag[ARM7]
+    }
 }
 
 void nds_init_cpu(nds_system* system)
@@ -76,8 +87,8 @@ void nds_load_rom(nds_system* system)
     nds_mmu* mmu = system->mmu;
     nds_cartridge* cart = system->cart;
     nds_main* binary[2] = {
-        &cart->header.arm9,
-        &cart->header.arm7
+        &cart->header.arm7,
+        &cart->header.arm9
     };
 
     // Load cartridge header to Main RAM
@@ -89,15 +100,20 @@ void nds_load_rom(nds_system* system)
         if (size <= BIN_MAX_SIZE_2) {
             int j = 0;
             u8 data[size];
-            u32 dest = binary[i]->ram & 0xFFFFFF;
+            u32 dest = binary[i]->ram; // & 0xFFFFFF;
 
             // Get binary from ROM
             fseek(cart->rom_handle, binary[i]->rom, SEEK_SET);
             fread(&data, 1, size, cart->rom_handle);
 
             // Copy executable data to memory
-            while (j < size && dest <= BIN_MAX_SIZE_2) {
-                mmu->mram[dest++] = data[j++];
+            while (j < size) {
+                if (i == 0) {
+                    nds7_write_byte(mmu, dest + j, data[j]);
+                } else {
+                    //...
+                }
+                j++;
             }
         } else {
             LOG(LOG_ERROR, "NDS%d binary exceeds size limit. NOT loaded.", i == 0 ? 9 : 7);
@@ -114,11 +130,13 @@ void nds_init(nds_system* system)
 nds_system* nds_make(nds_cartridge* cart)
 {
     nds_system* system = malloc(sizeof(nds_system));
+
     system->arm7 = arm_make(VER_4);
     system->arm9 = arm_make(VER_5);
     system->mmu = nds_make_mmu();
     system->cart = cart;
     nds_init(system);
+
     return system;
 }
 
