@@ -97,7 +97,7 @@ void nds_load_rom(nds_system* system)
     // Copy executable binaries to RAM (TODO: SWRAM / WRAM7)
     for (int i = 0; i < 2; i++) {
         u32 size = binary[i]->size;
-        if (size <= BIN_MAX_SIZE_2) {
+        /*if (size <= BIN_MAX_SIZE_2)*/ {
             int j = 0;
             u8 data[size];
             u32 dest = binary[i]->ram;
@@ -115,9 +115,9 @@ void nds_load_rom(nds_system* system)
                 }
                 j++;
             }
-        } else {
+        } /*else {
             LOG(LOG_ERROR, "NDS%d binary exceeds size limit. NOT loaded.", i == 0 ? 9 : 7);
-        }
+        }*/
     }
 }
 

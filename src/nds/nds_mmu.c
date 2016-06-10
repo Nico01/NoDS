@@ -67,9 +67,25 @@ u8 nds7_read_byte(nds_mmu* mmu, u32 address)
 
         return 0;
     case 4: {
-        char buffer[20];
-        LOG(LOG_ERROR, "IO read from %x", (page << 24) | address);
-        gets(buffer);
+        LOG(LOG_INFO, "IO: read register %x (NDS7)", address);
+
+        switch (address) {
+        case NDS7_IO_SPICNT: {
+            nds_spi_bus* spi_bus = &mmu->spi_bus;
+
+            return spi_bus->baud_rate |
+                   (spi_bus->busy ? 128 : 0);
+        }
+        case NDS7_IO_SPICNT+1: {
+            nds_spi_bus* spi_bus = &mmu->spi_bus;
+
+            return spi_bus->device |
+                   (spi_bus->bugged ? 4 : 0) |
+                   (spi_bus->chipselect ? 8 : 0) |
+                   (spi_bus->ireq ? 64 : 0) |
+                   (spi_bus->enable ? 128 : 0);
+        }
+        }
         return 0;
     }
     }
@@ -127,14 +143,33 @@ void nds7_write_byte(nds_mmu* mmu, u32 address, u8 value)
 
         break;
     case 4: {
-        char buffer[20];
-        LOG(LOG_INFO, "IO write to %x=%x", (page << 24) | address, value);
-        gets(buffer);
+        LOG(LOG_INFO, "IO: write register %x=%x (NDS7)", address, value);
+
+        switch (address) {
+        case NDS7_IO_SPICNT: {
+            nds_spi_bus* spi_bus = &mmu->spi_bus;
+
+            // TODO: busy flag is presumably read-only, further
+            //       investigation / reversing required.
+            spi_bus->baud_rate = value & 3;
+            break;
+        }
+        case NDS7_IO_SPICNT+1: {
+            nds_spi_bus* spi_bus = &mmu->spi_bus;
+
+            spi_bus->device = value & 3;
+            spi_bus->bugged = value & 4;
+            spi_bus->chipselect = value & 8;
+            spi_bus->ireq = value & 64;
+            spi_bus->enable = value & 128;
+            break;
+        }
+        }
         break;
     }
+    default:
+        LOG(LOG_ERROR, "Write byte to %x=%x", (page << 24) | address, value);
     }
-
-    LOG(LOG_INFO, "Write byte to %x=%x", (page << 24) | address, value);
 }
 
 void nds7_write_hword(nds_mmu* mmu, u32 address, u16 value)

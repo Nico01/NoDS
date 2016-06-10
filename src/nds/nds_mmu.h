@@ -22,11 +22,17 @@
 
 #include "../common/types.h"
 #include "../arm/arm_cpu.h"
+#include "nds_spi.h"
 
 typedef enum {
     ARM7 = 0,
     ARM9 = 1
 } nds_cpu_index;
+
+typedef enum {
+    NDS7_IO_SPICNT = 0x1C0,
+    NDS7_IO_SPIDATA = 0x1C2
+} nds_io_reg;
 
 typedef enum {
     ARM7_ALLOC_1ND = 1,
@@ -39,6 +45,7 @@ typedef struct {
     bool enable;
 } nds_vram_cnt;
 
+// move to another file
 typedef enum {
     INT_VBLANK = 1,
     INT_HBLANK = 2,
@@ -82,6 +89,9 @@ typedef struct {
 
     // IPC FIFO (0 = ARM7, 1 = ARM9)
     nds_fifo fifo[2];
+
+    // Serial Peripheral Interface (SPI)
+    nds_spi_bus spi_bus;
 
     u8 mram[0x400000]; // 4MB Main Memory
     u8 swram[0x8000]; // 32KB Shared WRAM
