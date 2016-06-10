@@ -167,6 +167,10 @@ void nds7_write_byte(nds_mmu* mmu, u32 address, u8 value)
         }
         break;
     }
+    // NoDS debug port (FFXXXXXXh)
+    case 255:
+        printf("%c", value);
+        break;
     default:
         LOG(LOG_ERROR, "Write byte to %x=%x", (page << 24) | address, value);
     }
