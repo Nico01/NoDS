@@ -100,7 +100,7 @@ void nds_load_rom(nds_system* system)
         if (size <= BIN_MAX_SIZE_2) {
             int j = 0;
             u8 data[size];
-            u32 dest = binary[i]->ram; // & 0xFFFFFF;
+            u32 dest = binary[i]->ram;
 
             // Get binary from ROM
             fseek(cart->rom_handle, binary[i]->rom, SEEK_SET);
