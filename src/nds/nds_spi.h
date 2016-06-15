@@ -45,7 +45,7 @@ typedef struct {
     bool bugged;
     bool ireq;
     bool enable;
-    bool chipselect[3];
+    bool cs_hold;
 
     // Slave devices
     nds_firmware firmware;

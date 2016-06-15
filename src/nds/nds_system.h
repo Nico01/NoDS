@@ -25,12 +25,12 @@
 #include "nds_mmu.h"
 #include "nds_cartridge.h"
 
-typedef struct {
+/*typedef struct {
     char* bios7;
     char* bios9;
     char* firmware;
     bool hle;
-} nds_config;
+} nds_config;*/
 
 typedef struct {
     arm_cpu* arm7;
