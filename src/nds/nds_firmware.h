@@ -21,9 +21,33 @@
 #define _NDS_FIRMWARE_H_
 
 #include <stdio.h>
+#include "../common/types.h"
+
+typedef enum {
+    FIRM_CMD_WREN = 0x06,
+    FIRM_CMD_WRDI = 0x04,
+    FIRM_CMD_RDID = 0x9F,
+    FIRM_CMD_RDSR = 0x05,
+    FIRM_CMD_READ = 0x03,
+    FIRM_CMD_FAST = 0x0B,
+    FIRM_CMD_PW = 0x0A,
+    FIRM_CMD_PP = 0x02,
+    FIRM_CMD_PE = 0xDB,
+    FIRM_CMD_SE = 0xD8,
+    FIRM_CMD_DP = 0xB9,
+    FIRM_CMD_RDP = 0xAB
+} nds_firmware_cmd;
 
 typedef struct {
-    FILE* firmware_handle;
+    FILE* file_handle;
+    int transfers;
+    int command;
+    u32 address;
+    bool read_addr;
+    bool write_enable;
+    u8 data;
 } nds_firmware;
+
+void nds_firm_write(nds_firmware* firmware, u8 value, bool hold);
 
 #endif

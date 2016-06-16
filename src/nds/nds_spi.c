@@ -32,8 +32,8 @@ u8 nds_spi_read(nds_spi_bus* spi_bus)
         LOG(LOG_INFO, "SPI: read from POWERMANAGER");
         break;
     case SPI_FIRMWARE:
-        LOG(LOG_INFO, "SPI: read from FIRMWARE");
-        break;
+        LOG(LOG_INFO, "SPI: read from FIRMWARE (%x)", spi_bus->firmware.data);
+        return spi_bus->firmware.data;
     case SPI_TOUCHSCR:
         LOG(LOG_INFO, "SPI: read from TOUCHSCREEN");
         break;
@@ -56,6 +56,7 @@ void nds_spi_write(nds_spi_bus* spi_bus, u8 value)
         break;
     case SPI_FIRMWARE:
         LOG(LOG_INFO, "SPI: write to FIRMWARE (%x)", value);
+        nds_firm_write(&spi_bus->firmware, value, spi_bus->cs_hold);
         break;
     case SPI_TOUCHSCR:
         LOG(LOG_INFO, "SPI: write to TOUCHSCREEN (%x)", value);
