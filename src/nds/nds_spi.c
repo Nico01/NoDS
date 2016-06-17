@@ -43,7 +43,7 @@ u8 nds_spi_read(nds_spi_bus* spi_bus)
 {
     if (!spi_bus->enable) {
         LOG(LOG_ERROR, "SPI: read even though not enabled");
-        return;
+        return 0;
     }
 
     ASSERT(spi_bus->bugged, LOG_ERROR, "SPI: in bugged 16-bit mode!");
