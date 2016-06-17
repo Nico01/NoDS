@@ -204,6 +204,13 @@ void nds7_write_byte(nds_mmu* mmu, u32 address, u8 value)
             nds_spi_bus* spi_bus = &mmu->spi_bus;
 
             nds_spi_write(spi_bus, value);
+
+            // triggers IRQ on transfer completion if specified.
+            // this should propably be moved into nds_spi_write
+            // but this is sooo much simpler ._.
+            if (spi_bus->ireq) {
+                mmu->interrupt_flag[0] |= INT_SPI_BUS;
+            }
         }
         case NDS_IO_IME:
         case NDS_IO_IME+1:
