@@ -76,6 +76,9 @@ void nds_spi_write(nds_spi_bus* spi_bus, u8 value)
     case SPI_FIRMWARE:
         LOG(LOG_INFO, "SPI: write to FIRMWARE (%x)", value);
         nds_firm_write(&spi_bus->firmware, value);
+        if (!spi_bus->cs_hold) {
+            nds_firm_next_cmd(&spi_bus->firmware);
+        }
         break;
     case SPI_TOUCHSCR:
         LOG(LOG_INFO, "SPI: write to TOUCHSCREEN (%x)", value);
