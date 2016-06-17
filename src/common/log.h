@@ -26,15 +26,20 @@
 #define LOG_WARN 1
 #define LOG_ERROR 2
 
+#define RED     "\x1b[31m"
+#define BLUE    "\x1b[34m"
+#define MAGENTA "\x1b[35m"
+#define RESET   "\x1b[0m"
+
 #ifdef DEBUG
 #define LOG(loglevel, ...) { int _line = __LINE__;\
     char message[512];\
     snprintf(message, 512, __VA_ARGS__);\
     switch (loglevel)\
     {\
-    case LOG_INFO: printf("[INFO] %s:%d: %s\n", __FILE__, _line, message); break;\
-    case LOG_WARN: printf("[WARN] %s:%d: %s\n", __FILE__, _line, message); break;\
-    case LOG_ERROR: printf("[ERROR] %s:%d: %s\n", __FILE__, _line, message); break;\
+    case LOG_INFO: printf("[" BLUE "INFO" RESET "] %s:%d: %s\n", __FILE__, _line, message); break;\
+    case LOG_WARN: printf("[" MAGENTA "INFO" RESET "] %s:%d: %s\n", __FILE__, _line, message); break;\
+    case LOG_ERROR: printf("[" RED "INFO" RESET "] %s:%d: %s\n", __FILE__, _line, message); break;\
     }\
 }
 #else
@@ -47,4 +52,4 @@
 #define ASSERT(condition, loglevel, ...) {}
 #endif
 
-#endif 
+#endif
