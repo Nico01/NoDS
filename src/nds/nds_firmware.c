@@ -36,17 +36,27 @@ void nds_firm_write(nds_firmware* firmware, u8 value)
 {
     int status = firmware->status;
 
+    // *generally* sets data register to zero since
+    // SPIDATA eventually is zero when submitting bytes that do
+    // not produce any output to SPIDATA.
     firmware->data = 0;
 
+    // FLASH chip may be in deep sleep mode where it only
+    // accepts RDP (0xAB) as command, which releases deep mode.
     if (firmware->status == FIRM_STAT_DEEP) {
         LOG(LOG_INFO, "SPI: FIRM: transfer while being deep");
         if (value == FIRM_CMD_RDP) {
-            LOG(LOG_INFO, "SPI: FIRM: woken up!");
+            LOG(LOG_INFO, "SPI: FIRM: ok! woken up!");
             firmware->status = FIRM_STAT_IDLE;
         }
         return;
     }
 
+    // Schedules the current state of the chip. ADDR has priority over
+    // DUMMY and DUMMY has priority over READ and so on since status
+    // may consist of multiple states whereby only one is scheduled at
+    // the time and e.g. STAT_ADDR must be scheduled before STAT_DUMMY
+    // since the address should be read before ommiting the dummy byte.
     if (status == FIRM_STAT_CMD) {
         switch (value) {
         case FIRM_CMD_WREN:
