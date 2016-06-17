@@ -38,16 +38,27 @@ typedef enum {
     FIRM_CMD_RDP = 0xAB
 } nds_firmware_cmd;
 
+typedef enum {
+    FIRM_STAT_IDLE = 0,
+    FIRM_STAT_CMD = 1,
+    FIRM_STAT_ADDR = 2,
+    FIRM_STAT_JEDEC = 4,
+    FIRM_STAT_STATUS = 8,
+    FIRM_STAT_READ = 16,
+    FIRM_STAT_DUMMY = 32,
+    FIRM_STAT_DEEP = 64
+} nds_firmware_state;
+
 typedef struct {
     FILE* file_handle;
     int transfers;
-    int command;
+    int status;
+    bool writable;
     u32 address;
-    bool read_addr;
-    bool write_enable;
     u8 data;
 } nds_firmware;
 
-void nds_firm_write(nds_firmware* firmware, u8 value, bool hold);
+void nds_firm_next_cmd(nds_firmware* firmware);
+void nds_firm_write(nds_firmware* firmware, u8 value);
 
 #endif

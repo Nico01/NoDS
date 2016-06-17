@@ -36,5 +36,5 @@
 *.nds
 *.bin
 *.sav
-log.txt
+*log.txt
 nods

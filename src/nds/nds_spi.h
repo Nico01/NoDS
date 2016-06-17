@@ -39,6 +39,7 @@ typedef enum {
 
 typedef struct {
     // SPICNT
+    nds_spi_device device_old;
     nds_spi_device device;
     nds_baud_rate baud_rate;
     bool busy;
@@ -51,6 +52,8 @@ typedef struct {
     nds_firmware firmware;
 } nds_spi_bus;
 
+void nds_spi_init(nds_spi_bus* spi_bus);
+void nds_spi_update_cs(nds_spi_bus* spi_bus);
 u8 nds_spi_read(nds_spi_bus* spi_bus);
 void nds_spi_write(nds_spi_bus* spi_bus, u8 value);
 

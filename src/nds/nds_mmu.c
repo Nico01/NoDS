@@ -29,6 +29,9 @@ nds_mmu* nds_make_mmu()
     // I'll have to do further investigation on this.
     mmu->wramcnt = ARM7_ALLOC_1ND | ARM7_ALLOC_2ND;
 
+    // Initialize SPI master and slaves
+    nds_spi_init(&mmu->spi_bus);
+
     return mmu;
 }
 
@@ -164,11 +167,13 @@ void nds7_write_byte(nds_mmu* mmu, u32 address, u8 value)
         case NDS7_IO_SPICNT+1: {
             nds_spi_bus* spi_bus = &mmu->spi_bus;
 
+            spi_bus->device_old = spi_bus->device;
             spi_bus->device = value & 3;
             spi_bus->bugged = value & 4;
             spi_bus->cs_hold = value & 8;
             spi_bus->ireq = value & 64;
             spi_bus->enable = value & 128;
+            nds_spi_update_cs(spi_bus); // register changes in "chipselect" regarding firmware.
             break;
         }
         case NDS7_IO_SPIDATA: {

@@ -125,9 +125,6 @@ void nds_init(nds_system* system)
 {
     nds_init_cpu(system);
     nds_load_rom(system);
-
-    // todo: move this somewhere else..? :/
-    system->mmu->spi_bus.firmware.file_handle = fopen("firmware.bin", "rb");
 }
 
 nds_system* nds_make(nds_cartridge* cart)
