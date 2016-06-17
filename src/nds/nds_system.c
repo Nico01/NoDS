@@ -56,9 +56,10 @@ void nds_frame(nds_system* system)
     nds_mmu* mmu = system->mmu;
 
     for (int i = 0; i < TICKS_PER_FRAME; i++) {
-        // ARM7 logic
-        if (mmu->interrupt_master[ARM7] && (mmu->interrupt_enable[ARM7] &&
-                                            mmu->interrupt_flag[ARM7])) {
+        u32 masked7 = mmu->interrupt_enable[ARM7] && mmu->interrupt_flag[ARM7];
+        u32 masked9 = mmu->interrupt_enable[ARM9] && mmu->interrupt_flag[ARM9];
+        if (mmu->interrupt_master[ARM7] && masked7) {
+            LOG(LOG_INFO, "NDS7: IRQ: Triggered with ie&if=0x%x", masked7);
             arm_trigger_irq(system->arm7);
         }
         arm_step(system->arm7);
