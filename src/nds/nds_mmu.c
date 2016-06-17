@@ -95,6 +95,30 @@ u8 nds7_read_byte(nds_mmu* mmu, u32 address)
         }
         case NDS7_IO_SPIDATA+1:
             return 0;
+        case NDS_IO_IME:
+            return mmu->interrupt_master[0] & 0xFF;
+        case NDS_IO_IME+1:
+            return (mmu->interrupt_master[0] >> 8) & 0xFF;
+        case NDS_IO_IME+2:
+            return (mmu->interrupt_master[0] >> 16) & 0xFF;
+        case NDS_IO_IME+3:
+            return mmu->interrupt_master[0] >> 24;
+        case NDS_IO_IE:
+            return mmu->interrupt_enable[0] & 0xFF;
+        case NDS_IO_IE+1:
+            return (mmu->interrupt_enable[0] >> 8) & 0xFF;
+        case NDS_IO_IE+2:
+            return (mmu->interrupt_enable[0] >> 16) & 0xFF;
+        case NDS_IO_IE+3:
+            return mmu->interrupt_enable[0] >> 24;
+        case NDS_IO_IF:
+            return mmu->interrupt_flag[0] & 0xFF;
+        case NDS_IO_IF+1:
+            return (mmu->interrupt_flag[0] >> 8) & 0xFF;
+        case NDS_IO_IF+2:
+            return (mmu->interrupt_flag[0] >> 16) & 0xFF;
+        case NDS_IO_IF+3:
+            return mmu->interrupt_flag[0] >> 24;
         }
         return 0;
     }
@@ -180,6 +204,30 @@ void nds7_write_byte(nds_mmu* mmu, u32 address, u8 value)
             nds_spi_bus* spi_bus = &mmu->spi_bus;
 
             nds_spi_write(spi_bus, value);
+        }
+        case NDS_IO_IME:
+        case NDS_IO_IME+1:
+        case NDS_IO_IME+2:
+        case NDS_IO_IME+3: {
+            int n = (address - NDS_IO_IME) * 8;
+            mmu->interrupt_master[0] = (mmu->interrupt_master[0] & ~(0xFF << n)) | (value << n);
+            break;
+        }
+        case NDS_IO_IE:
+        case NDS_IO_IE+1:
+        case NDS_IO_IE+2:
+        case NDS_IO_IE+3: {
+            int n = (address - NDS_IO_IE) * 8;
+            mmu->interrupt_enable[0] = (mmu->interrupt_enable[0] & ~(0xFF << n)) | (value << n);
+            break;
+        }
+        case NDS_IO_IF:
+        case NDS_IO_IF+1:
+        case NDS_IO_IF+2:
+        case NDS_IO_IF+3: {
+            int n = (address - NDS_IO_IF) * 8;
+            mmu->interrupt_flag[0] &= ~(value << n);
+            break;
         }
         }
         break;

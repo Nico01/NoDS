@@ -31,7 +31,10 @@ typedef enum {
 
 typedef enum {
     NDS7_IO_SPICNT = 0x1C0,
-    NDS7_IO_SPIDATA = 0x1C2
+    NDS7_IO_SPIDATA = 0x1C2,
+    NDS_IO_IME = 0x208,
+    NDS_IO_IE = 0x210,
+    NDS_IO_IF = 0x214
 } nds_io_reg;
 
 typedef enum {
