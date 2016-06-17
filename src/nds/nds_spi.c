@@ -50,13 +50,13 @@ u8 nds_spi_read(nds_spi_bus* spi_bus)
 
     switch (spi_bus->device) {
     case SPI_POWERMAN:
-        LOG(LOG_INFO, "SPI: read from POWERMANAGER");
+        LOG(LOG_INFO, "SPI: POWER: unsupported read");
         break;
     case SPI_FIRMWARE:
-        LOG(LOG_INFO, "SPI: read from FIRMWARE (%x)", spi_bus->firmware.data);
+        LOG(LOG_INFO, "SPI: FIRM: read (%x)", spi_bus->firmware.data);
         return spi_bus->firmware.data;
     case SPI_TOUCHSCR:
-        LOG(LOG_INFO, "SPI: read from TOUCHSCREEN");
+        LOG(LOG_INFO, "SPI: TOUCH: unsupported read");
         break;
     case SPI_RESERVED:
         LOG(LOG_INFO, "SPI: read from RESERVED (odd code?)");
@@ -73,17 +73,17 @@ void nds_spi_write(nds_spi_bus* spi_bus, u8 value)
 
     switch (spi_bus->device) {
     case SPI_POWERMAN:
-        LOG(LOG_INFO, "SPI: write to POWERMANAGER (%x)", value);
+        LOG(LOG_INFO, "SPI: POWER: write (%x)", value);
         break;
     case SPI_FIRMWARE:
-        LOG(LOG_INFO, "SPI: write to FIRMWARE (%x)", value);
+        LOG(LOG_INFO, "SPI: FIRM: write (%x)", value);
         nds_firm_write(&spi_bus->firmware, value);
         if (!spi_bus->cs_hold) {
             nds_firm_next_cmd(&spi_bus->firmware);
         }
         break;
     case SPI_TOUCHSCR:
-        LOG(LOG_INFO, "SPI: write to TOUCHSCREEN (%x)", value);
+        LOG(LOG_INFO, "SPI: TOUCH: write (%x)", value);
         break;
     case SPI_RESERVED:
         LOG(LOG_INFO, "SPI: write to RESERVED (odd code?) (%x)", value);
