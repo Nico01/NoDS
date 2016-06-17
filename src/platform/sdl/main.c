@@ -76,7 +76,8 @@ int main(int argc, char** argv)
 
     // SDL mainloop
     while (running) {
-        arm_step(system->arm7);
+        //arm_step(system->arm7);
+        nds_frame(system);
 
         // Process SDL events
         while (SDL_PollEvent(&event)) {

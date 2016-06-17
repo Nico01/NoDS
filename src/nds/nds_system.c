@@ -57,7 +57,11 @@ void nds_frame(nds_system* system)
 
     for (int i = 0; i < TICKS_PER_FRAME; i++) {
         // ARM7 logic
-        //if (mmu->interrupt_master[ARM7] && (mmu->interrupt_enable[ARM7] && mmu->interrupt_flag[ARM7]
+        if (mmu->interrupt_master[ARM7] && (mmu->interrupt_enable[ARM7] &&
+                                            mmu->interrupt_flag[ARM7])) {
+            arm_trigger_irq(system->arm7);
+        }
+        arm_step(system->arm7);
     }
 }
 
