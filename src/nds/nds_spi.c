@@ -46,6 +46,8 @@ u8 nds_spi_read(nds_spi_bus* spi_bus)
         return;
     }
 
+    ASSERT(spi_bus->bugged, "SPI: in bugged 16-bit mode!");
+
     switch (spi_bus->device) {
     case SPI_POWERMAN:
         LOG(LOG_INFO, "SPI: read from POWERMANAGER");
