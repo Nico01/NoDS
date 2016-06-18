@@ -24,29 +24,24 @@
 #include "../arm/arm_cpu.h"
 #include "nds_spi.h"
 
+#define FIFO_SIZE 16
+
 typedef enum {
     ARM7 = 0,
     ARM9 = 1
 } nds_cpu_index;
 
 typedef enum {
+    NDS_IPCSYNC = 0x180,
+    NDS_IPCFIFOCNT = 0x184,
+    NDS_IPCFIFOSEND = 0x188,
+    NDS_IPCFIFORECV = 0x100000,
     NDS7_IO_SPICNT = 0x1C0,
     NDS7_IO_SPIDATA = 0x1C2,
     NDS_IO_IME = 0x208,
     NDS_IO_IE = 0x210,
     NDS_IO_IF = 0x214
 } nds_io_reg;
-
-typedef enum {
-    ARM7_ALLOC_1ND = 1,
-    ARM7_ALLOC_2ND = 2
-} nds_swram_alloc;
-
-typedef struct {
-    int mst;
-    int offset;
-    bool enable;
-} nds_vram_cnt;
 
 // move to another file
 typedef enum {
@@ -75,9 +70,29 @@ typedef enum {
     INT_WIFI = 16777216
 } nds_interrupt;
 
+typedef enum {
+    ARM7_ALLOC_1ND = 1,
+    ARM7_ALLOC_2ND = 2
+} nds_swram_alloc;
+
 typedef struct {
-    u32 buffer[16];
-    int index;
+    int mst;
+    int offset;
+    bool enable;
+} nds_vram_cnt;
+
+typedef struct {
+    bool enable;
+    bool enable_irq;
+} nds_fifo_cnt;
+
+typedef struct {
+    u32 buffer[FIFO_SIZE];
+    u32 recent_read;
+    int read_index;
+    int write_index;
+    int reads;
+    int writes;
 } nds_fifo;
 
 typedef struct {
@@ -90,7 +105,8 @@ typedef struct {
     u32 interrupt_enable[2];
     u32 interrupt_flag[2];
 
-    // IPC FIFO (0 = ARM7, 1 = ARM9)
+    // IPC RECV FIFOS (0 = ARM7, 1 = ARM9)
+    nds_fifo_cnt fifocnt[2];
     nds_fifo fifo[2];
 
     // Serial Peripheral Interface (SPI)

@@ -36,6 +36,28 @@ nds_mmu* nds_make_mmu()
     return mmu;
 }
 
+u32 nds7_fifo_recv(nds_mmu* mmu)
+{
+    nds_fifo* fifo = &mmu->fifo[ARM7];
+    u8 value = fifo->recent_read;
+
+    if (fifo->reads < fifo->writes) {
+        value = fifo->recent_read = fifo->buffer[fifo->read_index];
+        fifo->read_index = (fifo->read_index + 1) % FIFO_SIZE;
+        fifo->reads++;
+    }
+
+    return value;
+}
+
+void nds7_fifo_send(nds_mmu* mmu, u32 value)
+{
+    nds_fifo* fifo = &mmu->fifo[ARM9];
+    fifo->buffer[fifo->write_index] = value;
+    fifo->write_index = (fifo->write_index + 1) % FIFO_SIZE;
+    fifo->writes++;
+}
+
 int nds7_cycles(nds_mmu* mmu, u32 address, arm_size size, bool write, arm_cycle type)
 {
     return 1;
@@ -74,6 +96,20 @@ u8 nds7_read_byte(nds_mmu* mmu, u32 address)
         LOG(LOG_INFO, "IO: read register %x (NDS7)", address);
 
         switch (address) {
+        /*case NDS_IPCFIFOCNT: {
+            nds_fifo* recv_fifo = &mmu->fifo[ARM7];
+            nds_fifo* send_fifo = &mmu->fifo[ARM9];
+            nds_fifo_cnt* recv_cnt = &mmu->fifocnt[ARM7];
+            nds_fifp_cnt* send_cnt = &mmu->fifocnt[ARM9];
+
+
+        }*/
+        case NDS_IPCFIFORECV:
+        case NDS_IPCFIFORECV+1:
+        case NDS_IPCFIFORECV+2:
+        case NDS_IPCFIFORECV+3:
+            LOG(LOG_ERROR, "IPC: FIFO: non-standard fifo read. unsupported. (NDS7)");
+            return 0;
         case NDS7_IO_SPICNT: {
             nds_spi_bus* spi_bus = &mmu->spi_bus;
 
@@ -138,6 +174,18 @@ u16 nds7_read_hword(nds_mmu* mmu, u32 address)
 
 u32 nds7_read_word(nds_mmu* mmu, u32 address)
 {
+    int page = address >> 24;
+
+    if (page == 4) {
+        switch (address & 0x00FFFFFF) {
+        case NDS_IPCFIFORECV: {
+            u32 value = nds7_fifo_recv(mmu);
+            LOG(LOG_INFO, "IPC: FIFO: dequeued 0x%x (NDS7)", value);
+            return value;
+        }
+        }
+    }
+
     return nds7_read_byte(mmu, address) |
            (nds7_read_byte(mmu, address+1) << 8) |
            (nds7_read_byte(mmu, address+2) << 16) |
@@ -181,6 +229,12 @@ void nds7_write_byte(nds_mmu* mmu, u32 address, u8 value)
         LOG(LOG_INFO, "IO: write register %x=%x (NDS7)", address, value);
 
         switch (address) {
+        case NDS_IPCFIFOSEND:
+        case NDS_IPCFIFOSEND+1:
+        case NDS_IPCFIFOSEND+2:
+        case NDS_IPCFIFOSEND+3:
+            LOG(LOG_ERROR, "IPC: FIFO: non-standard fifo write. unsupported. (NDS7)");
+            break;
         case NDS7_IO_SPICNT: {
             nds_spi_bus* spi_bus = &mmu->spi_bus;
 
@@ -257,6 +311,17 @@ void nds7_write_hword(nds_mmu* mmu, u32 address, u16 value)
 
 void nds7_write_word(nds_mmu* mmu, u32 address, u32 value)
 {
+    int page = address >> 24;
+
+    if (page == 4) {
+        switch (address & 0x00FFFFFF) {
+        case NDS_IPCFIFOSEND:
+            nds7_fifo_send(mmu, value);
+            LOG(LOG_INFO, "IPC: FIFO: enqueue 0x%x (NDS7)", value);
+            return;
+        }
+    }
+
     nds7_write_byte(mmu, address, value & 0xFF);
     nds7_write_byte(mmu, address + 1, (value >> 8) & 0xFF);
     nds7_write_byte(mmu, address + 2, (value >> 16) & 0xFF);
