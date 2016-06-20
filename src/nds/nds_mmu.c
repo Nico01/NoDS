@@ -36,26 +36,33 @@ nds_mmu* nds_make_mmu()
     return mmu;
 }
 
-u32 nds7_fifo_recv(nds_mmu* mmu)
+inline u32 nds7_fifo_recv(nds_mmu* mmu)
 {
     nds_fifo* fifo = &mmu->fifo[ARM7];
     u8 value = fifo->recent_read;
+    int write_index = fifo->write_index;
 
-    if (fifo->reads < fifo->writes) {
-        value = fifo->recent_read = fifo->buffer[fifo->read_index];
-        fifo->read_index = (fifo->read_index + 1) % FIFO_SIZE;
-        fifo->reads++;
+    if (write_index > 0 && mmu->fifocnt[ARM7].enable) {
+        u32* buffer = fifo->buffer;
+        value = fifo->recent_read = buffer[0];
+
+        for (int i = 1; i < write_index; i++) {
+            buffer[i - 1] = buffer[i];
+        }
+
+        fifo->write_index--;
     }
 
     return value;
 }
 
-void nds7_fifo_send(nds_mmu* mmu, u32 value)
+inline void nds7_fifo_send(nds_mmu* mmu, u32 value)
 {
     nds_fifo* fifo = &mmu->fifo[ARM9];
-    fifo->buffer[fifo->write_index] = value;
-    fifo->write_index = (fifo->write_index + 1) % FIFO_SIZE;
-    fifo->writes++;
+
+    if (fifo->write_index < FIFO_SIZE && mmu->fifocnt[ARM7].enable) {
+        fifo->buffer[fifo->write_index++] = value;
+    }
 }
 
 int nds7_cycles(nds_mmu* mmu, u32 address, arm_size size, bool write, arm_cycle type)
@@ -96,14 +103,24 @@ u8 nds7_read_byte(nds_mmu* mmu, u32 address)
         LOG(LOG_INFO, "IO: read register %x (NDS7)", address);
 
         switch (address) {
-        /*case NDS_IPCFIFOCNT: {
-            nds_fifo* recv_fifo = &mmu->fifo[ARM7];
+        case NDS_IPCFIFOCNT: {
             nds_fifo* send_fifo = &mmu->fifo[ARM9];
-            nds_fifo_cnt* recv_cnt = &mmu->fifocnt[ARM7];
-            nds_fifp_cnt* send_cnt = &mmu->fifocnt[ARM9];
+            nds_fifo_cnt* fifocnt = &mmu->fifocnt[ARM7];
 
+            return ((send_fifo->write_index == 0) ? 1 : 0) |
+                   ((send_fifo->write_index == FIFO_SIZE) ? 2 : 0) |
+                   (fifocnt->enable_irq_send ? 4 : 0);
+        }
+        case NDS_IPCFIFOCNT+1: {
+            nds_fifo* recv_fifo = &mmu->fifo[ARM7];
+            nds_fifo_cnt* fifocnt = &mmu->fifocnt[ARM7];
 
-        }*/
+            return ((recv_fifo->write_index == 0) ? 1 : 0) |
+                   ((recv_fifo->write_index == FIFO_SIZE) ? 2 : 0) |
+                   (fifocnt->enable_irq_recv ? 4 : 0) |
+                   (fifocnt->error ? 128 : 0) |
+                   (fifocnt->enable ? 256 : 0);
+        }
         case NDS_IPCFIFORECV:
         case NDS_IPCFIFORECV+1:
         case NDS_IPCFIFORECV+2:
@@ -229,6 +246,27 @@ void nds7_write_byte(nds_mmu* mmu, u32 address, u8 value)
         LOG(LOG_INFO, "IO: write register %x=%x (NDS7)", address, value);
 
         switch (address) {
+        case NDS_IPCFIFOCNT: {
+            nds_fifo* send_fifo = &mmu->fifo[ARM9];
+            nds_fifo_cnt* fifocnt = &mmu->fifocnt[ARM7];
+
+            fifocnt->enable_irq_send = value & 4;
+
+            if (value & (1 << 3)) {
+                send_fifo->write_index = 0;
+                send_fifo->recent_read = 0; // not sure
+            }
+
+            break;
+        }
+        case NDS_IPCFIFOCNT+1: {
+            nds_fifo_cnt* fifocnt = &mmu->fifocnt[ARM7];
+
+            fifocnt->enable_irq_recv = value & 4;
+            fifocnt->error = value & 128;
+            fifocnt->enable = value & 256;
+            break;
+        }
         case NDS_IPCFIFOSEND:
         case NDS_IPCFIFOSEND+1:
         case NDS_IPCFIFOSEND+2:

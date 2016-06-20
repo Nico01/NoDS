@@ -83,16 +83,15 @@ typedef struct {
 
 typedef struct {
     bool enable;
-    bool enable_irq;
+    bool enable_irq_send;
+    bool enable_irq_recv;
+    bool error;
 } nds_fifo_cnt;
 
 typedef struct {
     u32 buffer[FIFO_SIZE];
     u32 recent_read;
-    int read_index;
     int write_index;
-    int reads;
-    int writes;
 } nds_fifo;
 
 typedef struct {
@@ -105,7 +104,7 @@ typedef struct {
     u32 interrupt_enable[2];
     u32 interrupt_flag[2];
 
-    // IPC RECV FIFOS (0 = ARM7, 1 = ARM9)
+    // IPC (RECV) FIFOS (0 = ARM7, 1 = ARM9)
     nds_fifo_cnt fifocnt[2];
     nds_fifo fifo[2];
 
