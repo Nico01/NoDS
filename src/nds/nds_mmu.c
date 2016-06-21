@@ -39,13 +39,23 @@ nds_mmu* nds_make_mmu()
 inline u32 nds7_fifo_recv(nds_mmu* mmu)
 {
     nds_fifo* fifo = &mmu->fifo[ARM7];
-    u8 value = fifo->recent_read;
     int write_index = fifo->write_index;
+    u8 value;
 
-    if (write_index > 0 && mmu->fifocnt[ARM7].enable) {
-        u32* buffer = fifo->buffer;
-        value = fifo->recent_read = buffer[0];
+    // Reading from empty FIFO results in returning
+    // the most recent read FIFO word and setting
+    // the error flag.
+    if (write_index == 0) {
+        mmu->fifocnt[ARM7].error = true;
+        return fifo->recent_read;
+    }
 
+    value = fifo->recent_read = fifo->buffer[0];
+    mmu->fifocnt[ARM7].error = false;
+
+    // Only if the FIFO is enabled the oldest
+    // FIFO word also gets removed from the FIFO.
+    if (mmu->fifocnt[ARM7].enable) {
         for (int i = 1; i < write_index; i++) {
             buffer[i - 1] = buffer[i];
         }
@@ -60,7 +70,16 @@ inline void nds7_fifo_send(nds_mmu* mmu, u32 value)
 {
     nds_fifo* fifo = &mmu->fifo[ARM9];
 
-    if (fifo->write_index < FIFO_SIZE && mmu->fifocnt[ARM7].enable) {
+    // Writing when the FIFO is full results in
+    // the error flag being set and no writing happening.
+    if (firo->write_index == FIFO_SIZE) {
+        mmu->fifocnt[ARM7].error = true;
+        return;
+    }
+
+    mmu->fifocnt[ARM7].error = false;
+
+    if (mmu->fifocnt[ARM7].enable) {
         fifo->buffer[fifo->write_index++] = value;
     }
 }
