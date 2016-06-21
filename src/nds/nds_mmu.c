@@ -51,7 +51,6 @@ inline u32 nds7_fifo_recv(nds_mmu* mmu)
     }
 
     value = fifo->recent_read = fifo->buffer[0];
-    mmu->fifocnt[ARM7].error = false;
 
     // Only if the FIFO is enabled the oldest
     // FIFO word also gets removed from the FIFO.
@@ -76,8 +75,6 @@ inline void nds7_fifo_send(nds_mmu* mmu, u32 value)
         mmu->fifocnt[ARM7].error = true;
         return;
     }
-
-    mmu->fifocnt[ARM7].error = false;
 
     if (mmu->fifocnt[ARM7].enable) {
         fifo->buffer[fifo->write_index++] = value;
