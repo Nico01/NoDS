@@ -82,6 +82,11 @@ typedef struct {
 } nds_vram_cnt;
 
 typedef struct {
+    u8 data_in;
+    bool allow_irq;
+} nds_ipc_sync;
+
+typedef struct {
     bool enable;
     bool enable_irq_send;
     bool enable_irq_recv;
@@ -99,12 +104,15 @@ typedef struct {
     int wramcnt;
     nds_vram_cnt vramcnt[9];
 
-    // Interrupt Control (0 = ARM7, 1 = ARM9)
+    // Interrupt Control
     u32 interrupt_master[2];
     u32 interrupt_enable[2];
     u32 interrupt_flag[2];
 
-    // IPC (RECV) FIFOS (0 = ARM7, 1 = ARM9)
+    // IPC SYNC registers
+    nds_ipc_sync sync[2];
+
+    // IPC (RECV) FIFOS
     nds_fifo_cnt fifocnt[2];
     nds_fifo fifo[2];
 

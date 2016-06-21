@@ -40,6 +40,7 @@ inline u32 nds7_fifo_recv(nds_mmu* mmu)
 {
     nds_fifo* fifo = &mmu->fifo[ARM7];
     int write_index = fifo->write_index;
+    u32* buffer = fifo->buffer;
     u8 value;
 
     // Reading from empty FIFO results in returning
@@ -50,7 +51,7 @@ inline u32 nds7_fifo_recv(nds_mmu* mmu)
         return fifo->recent_read;
     }
 
-    value = fifo->recent_read = fifo->buffer[0];
+    value = fifo->recent_read = buffer[0];
 
     // Only if the FIFO is enabled the oldest
     // FIFO word also gets removed from the FIFO.
@@ -71,7 +72,7 @@ inline void nds7_fifo_send(nds_mmu* mmu, u32 value)
 
     // Writing when the FIFO is full results in
     // the error flag being set and no writing happening.
-    if (firo->write_index == FIFO_SIZE) {
+    if (fifo->write_index == FIFO_SIZE) {
         mmu->fifocnt[ARM7].error = true;
         return;
     }
@@ -119,6 +120,11 @@ u8 nds7_read_byte(nds_mmu* mmu, u32 address)
         LOG(LOG_INFO, "IO: read register %x (NDS7)", address);
 
         switch (address) {
+        case NDS_IPCSYNC:
+            return mmu->sync[ARM7].data_in;
+        case NDS_IPCSYNC+1:
+            return mmu->sync[ARM9].data_in |
+                   (mmu->sync[ARM7].allow_irq ? 64 : 0);
         case NDS_IPCFIFOCNT: {
             nds_fifo* send_fifo = &mmu->fifo[ARM9];
             nds_fifo_cnt* fifocnt = &mmu->fifocnt[ARM7];
@@ -262,6 +268,15 @@ void nds7_write_byte(nds_mmu* mmu, u32 address, u8 value)
         LOG(LOG_INFO, "IO: write register %x=%x (NDS7)", address, value);
 
         switch (address) {
+        case NDS_IPCSYNC+1:
+            mmu->sync[ARM7].allow_irq = value & 64;
+            mmu->sync[ARM9].data_in = value & 0xF;
+
+            // Trigger SYNC interrupt on remote cpu if neccessary
+            if ((value & 32) && mmu->sync[ARM9].allow_irq) {
+                mmu->interrupt_flag[ARM9] |= INT_IPC_SYNC;
+            }
+            break;
         case NDS_IPCFIFOCNT: {
             nds_fifo* send_fifo = &mmu->fifo[ARM9];
             nds_fifo_cnt* fifocnt = &mmu->fifocnt[ARM7];
