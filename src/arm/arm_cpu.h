@@ -113,18 +113,18 @@ typedef struct {
     arm_memory memory;
     arm_version version;
     u32 base_vector;
-    
+
     struct {
         void* object;
         arm_svc_call method;
     } svc_handler;
-    
+
     struct {
         int status;
         u32 opcode[3];
         bool flush;
     } pipeline;
-    
+
     int cycles;
 } arm_cpu;
 

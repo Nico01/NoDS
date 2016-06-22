@@ -368,6 +368,11 @@ void nds7_write_byte(nds_mmu* mmu, u32 address, u8 value)
             mmu->interrupt_flag[0] &= ~(value << n);
             break;
         }
+        case NDS7_VRAMSTAT:
+            return (mmu->vramcnt[2].enable && mmu->vramcnt[2].mst == 2) |
+                   (mmu->vramcnt[3].enable && mmu->vramcnt[3].mst == 2);
+        case NDS7_WRAMSTAT:
+            return mmu->wramcnt;
         }
         break;
     }

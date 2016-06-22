@@ -31,6 +31,7 @@ typedef enum {
     ARM9 = 1
 } nds_cpu_index;
 
+// fix name inconsisties
 typedef enum {
     NDS_IPCSYNC = 0x180,
     NDS_IPCFIFOCNT = 0x184,
@@ -40,7 +41,9 @@ typedef enum {
     NDS7_IO_SPIDATA = 0x1C2,
     NDS_IO_IME = 0x208,
     NDS_IO_IE = 0x210,
-    NDS_IO_IF = 0x214
+    NDS_IO_IF = 0x214,
+    NDS7_VRAMSTAT = 0x240,
+    NDS7_WRAMSTAT = 0x241
 } nds_io_reg;
 
 // move to another file
