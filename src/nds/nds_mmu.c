@@ -121,6 +121,7 @@ u8 nds7_read_byte(nds_mmu* mmu, u32 address)
 
         switch (address) {
         case NDS_IPCSYNC:
+            LOG(LOG_INFO, "IPC: SYNC: read input (%x) (NDS7)", mmu->sync[ARM7].data_in);
             return mmu->sync[ARM7].data_in;
         case NDS_IPCSYNC+1:
             return mmu->sync[ARM9].data_in |
@@ -269,12 +270,15 @@ void nds7_write_byte(nds_mmu* mmu, u32 address, u8 value)
 
         switch (address) {
         case NDS_IPCSYNC+1:
+            LOG(LOG_INFO, "IPC: SYNC: write output (%x) (NDS7)", value & 0xF);
+
             mmu->sync[ARM7].allow_irq = value & 64;
             mmu->sync[ARM9].data_in = value & 0xF;
 
             // Trigger SYNC interrupt on remote cpu if neccessary
             if ((value & 32) && mmu->sync[ARM9].allow_irq) {
                 mmu->interrupt_flag[ARM9] |= INT_IPC_SYNC;
+                LOG(LOG_INFO, "IPC: SYNC: generate remote IRQ (NDS7)");
             }
             break;
         case NDS_IPCFIFOCNT: {
