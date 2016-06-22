@@ -38,8 +38,8 @@
     switch (loglevel)\
     {\
     case LOG_INFO: printf("[" BLUE "INFO" RESET "] %s:%d: %s\n", __FILE__, _line, message); break;\
-    case LOG_WARN: printf("[" MAGENTA "INFO" RESET "] %s:%d: %s\n", __FILE__, _line, message); break;\
-    case LOG_ERROR: printf("[" RED "INFO" RESET "] %s:%d: %s\n", __FILE__, _line, message); break;\
+    case LOG_WARN: printf("[" MAGENTA "WARN" RESET "] %s:%d: %s\n", __FILE__, _line, message); break;\
+    case LOG_ERROR: printf("[" RED "ERROR" RESET "] %s:%d: %s\n", __FILE__, _line, message); break;\
     }\
 }
 #else
