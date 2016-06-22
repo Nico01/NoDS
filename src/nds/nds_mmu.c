@@ -298,8 +298,12 @@ void nds7_write_byte(nds_mmu* mmu, u32 address, u8 value)
             nds_fifo_cnt* fifocnt = &mmu->fifocnt[ARM7];
 
             fifocnt->enable_irq_recv = value & 4;
-            fifocnt->error = value & 128;
             fifocnt->enable = value & 256;
+
+            // acknowledge errors
+            if (value & 128) {
+                fifocnt->error = false;
+            }
             break;
         }
         case NDS_IPCFIFOSEND:
