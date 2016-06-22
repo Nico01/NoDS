@@ -8,18 +8,18 @@
 #define FIFO_RECV_EMPTY (1 << 8)
 
 int main(void) {
-	// Enable FIFOs
+    // Enable FIFOs
     IPCFIFOCNT = FIFO_ENABLE;
 
     consoleDemoInit();
     puts("Simple IPC FIFO demo.");
 
-	while(1) {
+    while(1) {
         if (!(IPCFIFOCNT & FIFO_RECV_EMPTY)) {
             printf("%d\n", IPCFIFORECV);
         }
-		swiWaitForVBlank();
-	}
+        swiWaitForVBlank();
+    }
 
-	return 0;
+    return 0;
 }

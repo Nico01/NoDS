@@ -10,19 +10,19 @@ int main() {
     int i = 0;
 
     irqInit();
-	irqEnable( IRQ_VBLANK);
+    irqEnable( IRQ_VBLANK);
 
     // Enable FIFOs
     IPCFIFOCNT = FIFO_ENABLE;
 
-	// Keep the ARM7 mostly idle
-	while (1) {
+    // Keep the ARM7 mostly idle
+    while (1) {
         // Send i over FIFO
         if (!(IPCFIFOCNT & FIFO_SEND_FULL)) {
             IPCFIFOSEND = i++;
         }
         swiWaitForVBlank();
-	}
-	return 0;
-}
+    }
 
+    return 0;
+}
