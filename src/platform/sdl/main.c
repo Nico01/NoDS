@@ -49,10 +49,19 @@ void create_window(int width, int height)
 int main(int argc, char** argv)
 {
     SDL_Event event;
+    nds_cartridge* cart;
+    nds_system* system;
     bool running = true;
-    nds_cartridge* cart = nds_cart_open("rom.nds");
-    nds_system* system = nds_make(cart);
     system_descriptor descriptor = nds_descriptor;
+
+    if (argc != 2) {
+        puts("usage: ./nods rom_path");
+        return 0;
+    }
+
+    // Open supplied ROM.
+    cart = nds_cart_open(argv[1]);
+    system = nds_make(cart);
 
     // Did we read the file?
     if (cart == NULL) {

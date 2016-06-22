@@ -36,6 +36,7 @@
 *.d
 *.nds
 *.bin
+*.rom
 *.sav
 *log.txt
 nods
