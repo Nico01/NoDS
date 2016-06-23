@@ -117,7 +117,7 @@ u8 nds7_read_byte(nds_mmu* mmu, u32 address)
 
         return 0;
     case 4: {
-        LOG(LOG_INFO, "IO: read register %x (NDS7)", address);
+        LOG(LOG_INFO, "MMU: IO: read register %x (NDS7)", address);
 
         switch (address) {
         case NDS_IPCSYNC:
@@ -245,7 +245,7 @@ u8 nds7_read_byte(nds_mmu* mmu, u32 address)
     }
     }
 
-    LOG(LOG_ERROR, "Read byte from %x", (page << 24) | address);
+    LOG(LOG_ERROR, "MMU: READ: byte from %x (NDS7)", (page << 24) | address);
 
     return 0;
 }
@@ -310,7 +310,7 @@ void nds7_write_byte(nds_mmu* mmu, u32 address, u8 value)
 
         break;
     case 4: {
-        LOG(LOG_INFO, "IO: write register %x=%x (NDS7)", address, value);
+        LOG(LOG_INFO, "MMU: IO: write register %x=%x (NDS7)", address, value);
 
         switch (address) {
         case NDS_IPCSYNC+1:
@@ -464,7 +464,7 @@ void nds7_write_byte(nds_mmu* mmu, u32 address, u8 value)
         printf("%c", value);
         break;
     default:
-        LOG(LOG_ERROR, "Write byte to %x=%x", (page << 24) | address, value);
+        LOG(LOG_ERROR, "MMU: WRITE: set byte to %x=%x (NDS7)", (page << 24) | address, value);
     }
 }
 
