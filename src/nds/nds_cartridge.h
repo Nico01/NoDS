@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../common/types.h"
+#include "common/types.h"
 
 #define NDS_STRING(str, len) strcpy(calloc(len + 1, 1), str)
 

@@ -18,7 +18,7 @@
  */
 
 #include "nds_firmware.h"
-#include "../common/log.h"
+#include "common/log.h"
 
 // do some research on this value
 #define FIRMWARE_SIZE 262144

@@ -18,7 +18,7 @@
  */
 
 #include "nds_spi.h"
-#include "../common/log.h"
+#include "common/log.h"
 
 void nds_spi_init(nds_spi_bus* spi_bus)
 {

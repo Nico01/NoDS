@@ -20,7 +20,7 @@
 #ifndef _NDS_SPI_H_
 #define _NDS_SPI_H_
 
-#include "../common/types.h"
+#include "common/types.h"
 #include "nds_firmware.h"
 
 typedef enum {

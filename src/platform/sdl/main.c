@@ -18,12 +18,12 @@
  */
 
 #include <SDL/SDL.h>
-#include "../../common/types.h"
-#include "../../common/log.h"
-#include "../../arm/gdb/arm_gdb.h"
-#include "../../nds/nds_cartridge.h"
-#include "../../nds/nds_system.h"
-#include "../../version.h"
+#include "common/types.h"
+#include "common/log.h"
+#include "arm/gdb/arm_gdb.h"
+#include "nds/nds_cartridge.h"
+#include "nds/nds_system.h"
+#include "version.h"
 
 SDL_Surface* window;
 

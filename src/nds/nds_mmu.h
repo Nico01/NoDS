@@ -20,8 +20,8 @@
 #ifndef _NDS_MMU_H_
 #define _NDS_MMU_H_
 
-#include "../common/types.h"
-#include "../arm/arm_cpu.h"
+#include "common/types.h"
+#include "arm/arm_cpu.h"
 #include "nds_spi.h"
 
 #define FIFO_SIZE 16

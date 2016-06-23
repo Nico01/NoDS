@@ -25,7 +25,7 @@
 #define _ARM_GLOBAL_H_
 
 #include <stdio.h>
-#include "../common/types.h"
-#include "../common/log.h"
+#include "common/types.h"
+#include "common/log.h"
 
 #endif

@@ -21,7 +21,7 @@
 #define _NDS_FIRMWARE_H_
 
 #include <stdio.h>
-#include "../common/types.h"
+#include "common/types.h"
 
 typedef enum {
     FIRM_CMD_WREN = 0x06,

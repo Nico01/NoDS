@@ -18,7 +18,7 @@
  */
 
 #include <stdio.h>
-#include "../common/log.h"
+#include "common/log.h"
 #include "nds_system.h"
 
 #define HEADER_RAM_LOC 0x3FFE00

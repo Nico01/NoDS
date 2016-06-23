@@ -18,7 +18,7 @@
  */
 
 #include <stdlib.h>
-#include "../common/log.h"
+#include "common/log.h"
 #include "nds_mmu.h"
 
 nds_mmu* nds_make_mmu()
@@ -36,7 +36,7 @@ nds_mmu* nds_make_mmu()
     return mmu;
 }
 
-inline u32 nds7_fifo_recv(nds_mmu* mmu)
+static inline u32 nds7_fifo_recv(nds_mmu* mmu)
 {
     nds_fifo* fifo = &mmu->fifo[ARM7];
     int write_index = fifo->write_index;
@@ -66,7 +66,7 @@ inline u32 nds7_fifo_recv(nds_mmu* mmu)
     return value;
 }
 
-inline void nds7_fifo_send(nds_mmu* mmu, u32 value)
+static inline void nds7_fifo_send(nds_mmu* mmu, u32 value)
 {
     nds_fifo* fifo = &mmu->fifo[ARM9];
 

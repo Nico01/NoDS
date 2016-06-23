@@ -18,10 +18,10 @@
  */
 
 #include <stdio.h>
-#include "../common/log.h"
+#include "common/log.h"
 #include "gba_system.h"
 
-system_descriptor nds_descriptor = {
+system_descriptor gba_descriptor = {
     .name = "gba",
     .screen_width = 240,
     .screen_height = 160,

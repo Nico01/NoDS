@@ -17,7 +17,7 @@
  * along with NoDS. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../common/log.h"
+#include "common/log.h"
 #include "nds_cartridge.h"
 
 void nds_cart_get_type(nds_cartridge* cart)
