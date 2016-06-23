@@ -197,11 +197,50 @@ u8 nds7_read_byte(nds_mmu* mmu, u32 address)
         case NDS_IO_IF+3:
             return mmu->interrupt_flag[0] >> 24;
         case NDS7_VRAMSTAT:
-            return (mmu->vramcnt[2].enable && mmu->vramcnt[2].mst == 2) |
-                   (mmu->vramcnt[3].enable && mmu->vramcnt[3].mst == 2);
+            return (mmu->vramcnt[VRAM_C].enable && mmu->vramcnt[VRAM_C].mst == 2) |
+                   (mmu->vramcnt[VRAM_D].enable && mmu->vramcnt[VRAM_D].mst == 2);
         case NDS7_WRAMSTAT:
             return mmu->wramcnt;
         }
+        return 0;
+    }
+    case 6: {
+        bool vram_c_mapped = mmu->vramcnt[VRAM_C].enable && mmu->vramcnt[VRAM_C].mst == 2;
+        bool vram_d_mapped = mmu->vramcnt[VRAM_D].enable && mmu->vramcnt[VRAM_D].mst == 2;
+
+        if (vram_c_mapped && vram_d_mapped) {
+            address %= 0x40000;
+
+            ASSERT(mmu->vramcnt[VRAM_C].offset == mmu->vramcnt[VRAM_D].offset,
+                   LOG_ERROR, "MMU: READ: weird VRAMCNT setting (NDS7)");
+
+            if (address < 0x20000) {
+                if (mmu->vramcnt[VRAM_C].offset == 0) {
+                    return mmu->vram_c[address];
+                }
+                if (mmu->vramcnt[VRAM_D].offset == 0) {
+                    return mmu->vram_d[address];
+                }
+            } else {
+                if (mmu->vramcnt[VRAM_C].offset == 1) {
+                    return mmu->vram_c[address - 0x20000];
+                }
+                if (mmu->vramcnt[VRAM_D].offset == 1) {
+                    return mmu->vram_d[address - 0x20000];
+                }
+            }
+        } else if (vram_c_mapped) {
+            // this behaviour is a bit sloppy since it doesn't
+            // take the vramcnt.offset into account.
+            return mmu->vram_c[address % 0x20000];
+        } else if (vram_d_mapped) {
+            // this behaviour is a bit sloppy since it doesn't
+            // take the vramcnt.offset into account.
+            return mmu->vram_d[address % 0x20000];
+        }
+
+        LOG(LOG_ERROR, "MMU: READ: VRAM read but no VRAM mapped (NDS7)");
+
         return 0;
     }
     }
@@ -374,6 +413,50 @@ void nds7_write_byte(nds_mmu* mmu, u32 address, u8 value)
             break;
         }
         }
+        break;
+    }
+    case 6: {
+        bool vram_c_mapped = mmu->vramcnt[VRAM_C].enable && mmu->vramcnt[VRAM_C].mst == 2;
+        bool vram_d_mapped = mmu->vramcnt[VRAM_D].enable && mmu->vramcnt[VRAM_D].mst == 2;
+
+        if (vram_c_mapped && vram_d_mapped) {
+            address %= 0x40000;
+
+            ASSERT(mmu->vramcnt[VRAM_C].offset == mmu->vramcnt[VRAM_D].offset,
+                   LOG_ERROR, "MMU: WRITE: weird VRAMCNT setting (NDS7)");
+
+            if (address < 0x20000) {
+                if (mmu->vramcnt[VRAM_C].offset == 0) {
+                    mmu->vram_c[address] = value;
+                    break;
+                }
+                if (mmu->vramcnt[VRAM_D].offset == 0) {
+                    mmu->vram_d[address] = value;
+                    break;
+                }
+            } else {
+                if (mmu->vramcnt[VRAM_C].offset == 1) {
+                    mmu->vram_c[address - 0x20000] = value;
+                    break;
+                }
+                if (mmu->vramcnt[VRAM_D].offset == 1) {
+                    mmu->vram_d[address - 0x20000] = value;
+                    break;
+                }
+            }
+        } else if (vram_c_mapped) {
+            // this behaviour is a bit sloppy since it doesn't
+            // take the vramcnt.offset into account.
+            mmu->vram_c[address % 0x20000] = value;
+            break;
+        } else if (vram_d_mapped) {
+            // this behaviour is a bit sloppy since it doesn't
+            // take the vramcnt.offset into account.
+            mmu->vram_d[address % 0x20000] = value;
+            break;
+        }
+
+        LOG(LOG_ERROR, "MMU: WRITE: VRAM write but no VRAM mapped (NDS7)");
         break;
     }
     // NoDS debug port (FFXXXXXXh)

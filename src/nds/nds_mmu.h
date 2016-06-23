@@ -78,6 +78,18 @@ typedef enum {
     ARM7_ALLOC_2ND = 2
 } nds_swram_alloc;
 
+typedef enum {
+    VRAM_A = 0,
+    VRAM_B = 1,
+    VRAM_C = 2,
+    VRAM_D = 3,
+    VRAM_E = 4,
+    VRAM_F = 5,
+    VRAM_G = 6,
+    VRAM_H = 7,
+    VRAM_I = 8
+} nds_vram;
+
 typedef struct {
     int mst;
     int offset;
